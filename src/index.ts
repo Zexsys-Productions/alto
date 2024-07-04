@@ -33,7 +33,8 @@ const createWindow = (): void => {
     "connect-src 'self' https://alto-api.onrender.com https://*.picovoice.ai https://*.picovoice.net;",
     "img-src 'self' data: https://storage.googleapis.com;",
     "script-src 'self' 'unsafe-eval' blob:;",
-    "worker-src 'self' blob:;"
+    "worker-src 'self' blob:;",
+    "media-src 'self' blob: https://storage.googleapis.com;"
   ];
 
   mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {

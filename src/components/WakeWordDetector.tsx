@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { usePorcupine } from "@picovoice/porcupine-react";
 import ppnBase64 from '../pico/ppn_base64';
 import porcupineModelBase64 from '../pico/porcupine_model_base64';
+import AudioRecorder from './AudioRecorder';
+
 
 const WakeWordDetector: React.FC = () => {
-  const [showPopup, setShowPopup] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcription, setTranscription] = useState<{ chunks: Array<{ text: string, timestamp: number[] }>, text: string } | null>(null);
 
   const {
     keywordDetection,
@@ -23,7 +26,30 @@ const WakeWordDetector: React.FC = () => {
   }
   const porcupineModel = { base64: porcupineModelBase64 }
 
+  const startAudio = useRef(new Audio('https://storage.googleapis.com/alto-serv/start.wav'));
+
   useEffect(() => {
+    startAudio.current.load();
+  }, []);
+
+  useEffect(() => {
+    const primeAudio = () => {
+      startAudio.current.play().then(() => {
+        startAudio.current.pause();
+        startAudio.current.currentTime = 0;
+      }).catch(error => console.error("Error priming audio:", error));
+      document.removeEventListener('click', primeAudio);
+    };
+
+    document.addEventListener('click', primeAudio);
+
+    return () => {
+      document.removeEventListener('click', primeAudio);
+    };
+  }, []);
+
+  useEffect(() => {
+    console.log('Initializing Porcupine...');
     init(
       "o2ZhLM7RW+Gn2IKGcwBN1mzHfcpY0CoutOF/b2JIfSNYH/ek5u0CCg==",
       porcupineKeyword,
@@ -33,16 +59,28 @@ const WakeWordDetector: React.FC = () => {
 
   useEffect(() => {
     if (isLoaded && !isListening) {
+      console.log('Porcupine loaded. Starting wake word detection...');
       start();
     }
   }, [isLoaded, isListening]);
 
   useEffect(() => {
     if (keywordDetection !== null && keywordDetection.label === "hey_alto") {
-      setShowPopup(true);
-      setTimeout(() => setShowPopup(false), 3000); // Hide popup after 3 seconds
+      console.log('Wake word "Hey Alto" detected!');
+      startAudio.current.play().catch(error => console.error("Error playing audio:", error));
+      setIsRecording(true);
     }
   }, [keywordDetection]);
+
+  const handleStopRecording = (transcription: { chunks: Array<{ text: string, timestamp: number[] }>, text: string }) => {
+    console.log('Recording stopped. Transcription:', transcription);
+    setIsRecording(false);
+    setTranscription(transcription);
+  };
+
+  useEffect(() => {
+    console.log('Recording state changed:', isRecording ? 'Started' : 'Stopped');
+  }, [isRecording]);
 
   if (error) {
     console.error('Porcupine error:', error);
@@ -50,19 +88,11 @@ const WakeWordDetector: React.FC = () => {
 
   return (
     <div>
-      {showPopup && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '10px',
-          boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-          zIndex: 1000
-        }}>
-          Hey Alto detected!
+      <AudioRecorder isRecording={isRecording} onStopRecording={handleStopRecording} />
+      {transcription && (
+        <div>
+          <h3>Transcription:</h3>
+          <p>{transcription.text}</p>
         </div>
       )}
     </div>

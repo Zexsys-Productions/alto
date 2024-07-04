@@ -40,3 +40,25 @@ export async function uploadScreenshot(file: File): Promise<string> {
     throw error;
   }
 }
+
+export async function uploadAudio(audioBlob: Blob): Promise<{ transcription: { chunks: Array<{ text: string, timestamp: number[] }>, text: string } }> {
+  const uuid = await getOrCreateUUID();
+  const formData = new FormData();
+  formData.append('file', audioBlob, 'audio.webm');
+  formData.append('client_uuid', uuid);
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/upload-audio`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      params: {
+        client_uuid: uuid
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading audio:', error);
+    throw error;
+  }
+}

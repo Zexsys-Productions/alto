@@ -26,6 +26,24 @@ const createWindow = (): void => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+
+  // Add Content Security Policy to allow connections to the API
+  const csp = [
+    "default-src 'self' 'unsafe-inline' data:;",
+    "connect-src 'self' https://alto-api.onrender.com https://*.picovoice.ai https://*.picovoice.net;",
+    "img-src 'self' data: https://storage.googleapis.com;",
+    "script-src 'self' 'unsafe-eval' blob:;",
+    "worker-src 'self' blob:;"
+  ];
+
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [csp.join(' ')]
+      }
+    });
+  });
 };
 
 // This method will be called when Electron has finished

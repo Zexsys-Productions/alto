@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://alto-api.onrender.com:8000';  // Replace with your actual API URL
+const API_BASE_URL = 'https://alto-api.onrender.com';  // Replace with your actual API URL
 
 export async function getOrCreateUUID(): Promise<string> {
   const storedUUID = localStorage.getItem('clientUUID');
@@ -30,6 +30,9 @@ export async function uploadScreenshot(file: File): Promise<string> {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      params: {
+        client_uuid: uuid
+      }
     });
     return response.data.url;
   } catch (error) {

@@ -45,6 +45,8 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@picovoice/porcupine-react": "^3.0.3",
+    "@picovoice/web-voice-processor": "^4.0.9",
     "axios": "^1.7.2",
     "electron-squirrel-startup": "^1.0.1",
     "react": "^18.3.1",

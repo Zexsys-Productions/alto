@@ -3,12 +3,14 @@ import './index.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import ScreenCapture from './components/ScreenCapture';
+import WakeWordDetector from './components/WakeWordDetector';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
 root.render(
   <React.StrictMode>
-    <ScreenCapture /> 
+    <ScreenCapture />
+    <WakeWordDetector />
   </React.StrictMode>
 );
 

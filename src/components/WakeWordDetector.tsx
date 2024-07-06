@@ -7,7 +7,8 @@ import AudioRecorder from './AudioRecorder';
 
 const WakeWordDetector: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
-  const [transcription, setTranscription] = useState<{ chunks: Array<{ text: string, timestamp: number[] }>, text: string } | null>(null);
+  const [transcription, setTranscription] = useState<string | null>(null);
+  const [claudeResponse, setClaudeResponse] = useState<string | null>(null);
 
   const {
     keywordDetection,
@@ -72,10 +73,13 @@ const WakeWordDetector: React.FC = () => {
     }
   }, [keywordDetection]);
 
-  const handleStopRecording = (transcription: { chunks: Array<{ text: string, timestamp: number[] }>, text: string }) => {
+  const handleStopRecording = (transcription: { chunks: Array<{ text: string, timestamp: number[] }>, text: string }, screenshotUrl: string, claudeResponse: string) => {
     console.log('Recording stopped. Transcription:', transcription);
+    console.log('Screenshot URL:', screenshotUrl);
+    console.log('Claude Response:', claudeResponse);
     setIsRecording(false);
-    setTranscription(transcription);
+    setTranscription(transcription.text);
+    setClaudeResponse(claudeResponse);
   };
 
   useEffect(() => {
@@ -89,10 +93,10 @@ const WakeWordDetector: React.FC = () => {
   return (
     <div>
       <AudioRecorder isRecording={isRecording} onStopRecording={handleStopRecording} />
-      {transcription && (
+      {transcription && claudeResponse && (
         <div>
-          <h3>Transcription:</h3>
-          <p>{transcription.text}</p>
+          <p>Request: {transcription}</p>
+          <p>AI Response: {claudeResponse}</p>
         </div>
       )}
     </div>

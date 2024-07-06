@@ -41,11 +41,12 @@ export async function uploadScreenshot(file: File): Promise<string> {
   }
 }
 
-export async function uploadAudio(audioBlob: Blob): Promise<{ transcription: { chunks: Array<{ text: string, timestamp: number[] }>, text: string } }> {
+export async function uploadAudio(audioBlob: Blob, screenshotUrl: string): Promise<{ transcription: { chunks: Array<{ text: string, timestamp: number[] }>, text: string }, claudeResponse: string }> {
   const uuid = await getOrCreateUUID();
   const formData = new FormData();
   formData.append('file', audioBlob, 'audio.webm');
   formData.append('client_uuid', uuid);
+  formData.append('screenshot_url', screenshotUrl);
 
   try {
     const response = await axios.post(`${API_BASE_URL}/upload-audio`, formData, {

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { uploadAudio } from '../utils/api';
+import { uploadAudio, uploadScreenshot } from '../utils/api';
+import { playAudioFromBase64 } from '../utils/audio';
 
 interface AudioRecorderProps {
   isRecording: boolean;
-  onStopRecording: (transcription: { chunks: Array<{ text: string, timestamp: number[] }>, text: string }) => void;
+  onStopRecording: (transcription: { chunks: Array<{ text: string, timestamp: number[] }>, text: string }, screenshotUrl: string, claudeResponse: string) => void;
 }
 
 const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecording }) => {
@@ -15,6 +16,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecord
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const startSound = new Audio('https://storage.googleapis.com/alto-serv/start.wav');
   const endSound = new Audio('https://storage.googleapis.com/alto-serv/load.wav');
+  const audioLevelIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isRecording) {
@@ -22,6 +24,26 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecord
     } else {
       stopRecording();
     }
+  }, [isRecording]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (audioLevelIntervalRef.current) {
+          clearInterval(audioLevelIntervalRef.current);
+        }
+      } else {
+        if (isRecording) {
+          startAudioLevelCheck();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [isRecording]);
 
   useEffect(() => {
@@ -46,6 +68,18 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecord
     };
   }, []);
 
+  const checkAudioLevel = () => {
+    if (analyserRef.current) {
+      const bufferLength = analyserRef.current.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyserRef.current.getByteFrequencyData(dataArray);
+      const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
+      if (average > 10) {
+        resetSilenceTimeout();
+      }
+    }
+  };
+
   const startRecording = async () => {
     try {
       console.log('Starting audio recording...');
@@ -60,21 +94,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecord
       source.connect(analyserRef.current);
 
       analyserRef.current.fftSize = 2048;
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
 
-      const checkAudioLevel = () => {
-        if (analyserRef.current) {
-          analyserRef.current.getByteFrequencyData(dataArray);
-          const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
-          if (average > 10) {
-            resetSilenceTimeout();
-          }
-        }
-        requestAnimationFrame(checkAudioLevel);
-      };
-
-      checkAudioLevel();
+      startAudioLevelCheck();
 
       mediaRecorderRef.current.ondataavailable = (event) => {
         audioChunksRef.current.push(event.data);
@@ -89,6 +110,65 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecord
     }
   };
 
+  const startAudioLevelCheck = () => {
+    if (audioLevelIntervalRef.current) {
+      clearInterval(audioLevelIntervalRef.current);
+    }
+    audioLevelIntervalRef.current = setInterval(checkAudioLevel, 100); // Check every 100ms
+  };
+
+  const captureScreenshot = async () => {
+    try {
+      const sources = await window.electronAPI.captureScreen();
+      const source = sources[0];
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: source.id,
+            minWidth: 1280,
+            maxWidth: 1280,
+            minHeight: 720,
+            maxHeight: 720
+          }
+        } as MediaTrackConstraints
+      });
+
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await new Promise(resolve => video.onloadedmetadata = resolve);
+      video.play();
+
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d')?.drawImage(video, 0, 0);
+      stream.getTracks().forEach(track => track.stop());
+
+      return new Promise<string>((resolve) => {
+        canvas.toBlob(async (blob) => {
+          if (blob) {
+            const file = new File([blob], 'screenshot.png', { type: 'image/png' });
+            try {
+              const url = await uploadScreenshot(file);
+              resolve(url);
+            } catch (error) {
+              console.error('Error uploading screenshot:', error);
+              resolve('');
+            }
+          } else {
+            resolve('');
+          }
+        }, 'image/png');
+      });
+    } catch (error) {
+      console.error('Error capturing screen:', error);
+      return '';
+    }
+  };
+
   const stopRecording = async () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       console.log('Stopping audio recording...');
@@ -100,12 +180,37 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecord
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       console.log('Audio recording stopped, total size:', audioBlob.size, 'bytes');
       
+      const screenshotUrl = await captureScreenshot();
+      
       try {
-        const result = await uploadAudio(audioBlob);
+        const result = await uploadAudio(audioBlob, screenshotUrl);
         setTranscription(result.transcription);
-        onStopRecording(result.transcription);
+        
+        // Get TTS audio for Claude's response
+        const ttsResponse = await fetch('https://alto-api.onrender.com/text-to-speech', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: result.claudeResponse }),
+        });
+        
+        if (!ttsResponse.ok) {
+          throw new Error(`HTTP error! status: ${ttsResponse.status}`);
+        }
+        
+        const ttsData = await ttsResponse.json();
+        
+        if (!ttsData.audioContent) {
+          throw new Error('No audio content received from TTS service');
+        }
+        
+        // Play the TTS audio
+        await playAudioFromBase64(ttsData.audioContent);
+        
+        onStopRecording(result.transcription, screenshotUrl, result.claudeResponse);
       } catch (error) {
-        console.error('Error uploading audio:', error);
+        console.error('Error uploading audio or getting TTS:', error);
       }
     }
   };

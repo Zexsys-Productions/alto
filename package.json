@@ -47,6 +47,10 @@
     "name": "Axesys",
     "email": "hello@axesys.xyz"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Triangulr/alto"
+  },
   "license": "MIT",
   "build": {
     "appId": "com.zexsys.alto",
@@ -76,6 +80,7 @@
     "electron-updater": "^6.2.1",
     "framer-motion": "^11.2.13",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "update-electron-app": "^3.0.0"
   }
 }

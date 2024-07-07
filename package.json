@@ -9,7 +9,8 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "build": "electron-builder --mac --win"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.4.0",
@@ -29,6 +30,7 @@
     "@vercel/webpack-asset-relocator-loader": "1.7.3",
     "css-loader": "^6.0.0",
     "electron": "31.1.0",
+    "electron-builder": "^24.13.3",
     "eslint": "^8.0.1",
     "eslint-plugin-import": "^2.25.0",
     "file-loader": "^6.2.0",
@@ -45,6 +47,17 @@
     "email": "hello@axesys.xyz"
   },
   "license": "MIT",
+  "build": {
+    "appId": "com.zexsys.alto",
+    "mac": {
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  },
   "dependencies": {
     "@picovoice/porcupine-react": "^3.0.3",
     "@picovoice/web-voice-processor": "^4.0.9",

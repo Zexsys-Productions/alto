@@ -1,4 +1,5 @@
 import type { Configuration } from 'webpack';
+import { DefinePlugin } from 'webpack';
 
 import { rules } from './webpack.rules';
 import { plugins } from './webpack.plugins';
@@ -17,3 +18,4 @@ export const rendererConfig: Configuration = {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.css'],
   },
 };
+

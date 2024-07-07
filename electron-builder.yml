@@ -1,0 +1,5 @@
+appId: com.zexsys.alto
+publish:
+  provider: github
+  owner: Triangulr
+  repo: alto

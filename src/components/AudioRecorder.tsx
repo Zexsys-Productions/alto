@@ -5,9 +5,10 @@ import { playAudioFromBase64 } from '../utils/audio';
 interface AudioRecorderProps {
   isRecording: boolean;
   onStopRecording: (transcription: { chunks: Array<{ text: string, timestamp: number[] }>, text: string }, screenshotUrl: string, claudeResponse: string) => void;
+  onRecordingStopped: () => void;
 }
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecording }) => {
+const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecording, onRecordingStopped }) => {
   const [transcription, setTranscription] = useState<{ chunks: Array<{ text: string, timestamp: number[] }>, text: string } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -24,6 +25,13 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecord
     } else {
       stopRecording();
     }
+
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      }
+    };
   }, [isRecording]);
 
   useEffect(() => {
@@ -179,6 +187,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecord
       
       const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       console.log('Audio recording stopped, total size:', audioBlob.size, 'bytes');
+      onRecordingStopped();
       
       const screenshotUrl = await captureScreenshot();
       

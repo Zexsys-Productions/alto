@@ -2,15 +2,16 @@ import './index.css';
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import ScreenCapture from './components/ScreenCapture';
+import { ChakraProvider } from '@chakra-ui/react';
 import WakeWordDetector from './components/WakeWordDetector';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
 root.render(
   <React.StrictMode>
-    <ScreenCapture />
-    <WakeWordDetector />
+    <ChakraProvider>
+      <WakeWordDetector />
+    </ChakraProvider>
   </React.StrictMode>
 );
 

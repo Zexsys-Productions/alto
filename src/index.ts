@@ -16,7 +16,9 @@ if (require('electron-squirrel-startup')) {
 // Add the new auto-updater configuration
 const server = 'https://alto-updates.vercel.app';
 const url = `${server}/update/${process.platform}/${app.getVersion()}`;
-autoUpdater.setFeedURL({ provider: 'generic', url });
+console.log(url);
+autoUpdater.setFeedURL({ provider: 'generic', url: url });
+autoUpdater.checkForUpdatesAndNotify();
 
 const createWindow = (): void => {
   // Create the browser window.

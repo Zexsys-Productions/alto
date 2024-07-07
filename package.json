@@ -1,7 +1,7 @@
 {
   "name": "alto",
   "productName": "Alto",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Alto AI Services",
   "main": ".webpack/main",
   "scripts": {

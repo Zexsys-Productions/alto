@@ -3,15 +3,11 @@ import { usePorcupine } from "@picovoice/porcupine-react";
 import ppnBase64 from '../pico/ppn_base64';
 import porcupineModelBase64 from '../pico/porcupine_model_base64';
 import AudioRecorder from './AudioRecorder';
-import { Alert, AlertIcon, AlertTitle, AlertDescription, Box, Card, CardHeader, CardBody, VStack, Text, Heading } from '@chakra-ui/react';
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalBody,
-  Spinner,
-} from '@chakra-ui/react';
+import { Alert, AlertIcon, AlertTitle, AlertDescription, Box, Card, CardHeader, CardBody, VStack, Text, Heading, Image, Button, Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Spinner } from '@chakra-ui/react';
+import axios from 'axios';
+import { getOrCreateUUID } from '../utils/api';
 
+const API_BASE_URL = 'https://alto-api.onrender.com'; 
 
 const WakeWordDetector: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -20,6 +16,11 @@ const WakeWordDetector: React.FC = () => {
   const [claudeResponse, setClaudeResponse] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [showConversation, setShowConversation] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState<Array<{
+    role: string;
+    content: Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }> | string;
+  }>>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const {
     keywordDetection,
@@ -108,6 +109,31 @@ const WakeWordDetector: React.FC = () => {
       console.log('Resuming wake word detection after delay...');
       start();
     }, 1000); // 1 second delay
+
+    setConversationHistory((prevHistory: typeof conversationHistory) => [
+      ...prevHistory,
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: transcription.text
+          },
+          {
+            type: 'image',
+            source: {
+              type: 'url',
+              media_type: 'image/png',
+              data: screenshotUrl
+            }
+          }
+        ]
+      },
+      {
+        role: 'assistant',
+        content: claudeResponse
+      }
+    ]);
   };
 
   const handleRecordingStopped = () => {
@@ -122,6 +148,31 @@ const WakeWordDetector: React.FC = () => {
   if (error) {
     console.error('Porcupine error:', error);
   }
+
+  const fetchConversationHistory = async () => {
+    try {
+      const uuid = await getOrCreateUUID();
+      const response = await axios.get(`${API_BASE_URL}/get-conversation-history/${uuid}`);
+      setConversationHistory(response.data.history);
+    } catch (error) {
+      console.error('Error fetching conversation history:', error);
+    }
+  };
+
+  const deleteConversationHistory = async () => {
+    try {
+      const uuid = await getOrCreateUUID();
+      await axios.delete(`${API_BASE_URL}/delete-conversation-history/${uuid}`);
+      setConversationHistory([]);
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error('Error deleting conversation history:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchConversationHistory();
+  }, []);
 
   return (
     <div>
@@ -151,25 +202,62 @@ const WakeWordDetector: React.FC = () => {
         </Alert>
       )}
       <AudioRecorder isRecording={isRecording} onStopRecording={handleStopRecording} onRecordingStopped={handleRecordingStopped} />
-      {showConversation && transcription && claudeResponse && (
-        <Card variant="elevated" maxW="md" mx="auto" mt={6}>
+      {conversationHistory.map((entry: {
+        role: string;
+        content: Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }> | string;
+      }, index: number) => (
+        <Card key={index} variant="elevated" maxW="md" mx="auto" mt={6}>
           <CardHeader>
-            <Heading size="md">Conversation</Heading>
+            <Heading size="md">{entry.role === 'user' ? 'You' : 'Alto'}</Heading>
           </CardHeader>
           <CardBody>
             <VStack spacing={4} align="stretch">
-              <Box>
-                <Text fontWeight="bold" mb={2}>Your Request:</Text>
-                <Text bg="gray.100" p={3} borderRadius="md">{transcription}</Text>
-              </Box>
-              <Box>
-                <Text fontWeight="bold" mb={2}>AI Response:</Text>
-                <Text bg="blue.50" p={3} borderRadius="md">{claudeResponse}</Text>
-              </Box>
+              {Array.isArray(entry.content) ? (
+                entry.content.map((item: { type: string; text?: string; source?: { type: string; media_type: string; data: string } }, itemIndex: number) => (
+                  <Box key={itemIndex}>
+                    {item.type === 'text' && (
+                      <Text bg={entry.role === 'user' ? "gray.100" : "blue.50"} p={3} borderRadius="md">
+                        {item.text}
+                      </Text>
+                    )}
+                    {item.type === 'image' && item.source && (
+                      <Image 
+                        src={item.source.type === 'url' ? item.source.data : `data:${item.source.media_type};base64,${item.source.data}`}
+                        alt="Conversation Image" 
+                        maxW="100%" 
+                        borderRadius="md" 
+                      />
+                    )}
+                  </Box>
+                ))
+              ) : (
+                <Text bg={entry.role === 'user' ? "gray.100" : "blue.50"} p={3} borderRadius="md">
+                  {entry.content}
+                </Text>
+              )}
             </VStack>
           </CardBody>
         </Card>
-      )}
+      ))}
+      <Button colorScheme="red" onClick={() => setIsDeleteModalOpen(true)} mt={4}>
+        Delete Conversation History
+      </Button>
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirm Deletion</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            Are you sure you want to delete the entire conversation history?
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="red" mr={3} onClick={deleteConversationHistory}>
+              Delete
+            </Button>
+            <Button variant="ghost" onClick={() => setIsDeleteModalOpen(false)}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       <Modal isOpen={isThinking} onClose={() => {}} isCentered closeOnOverlayClick={false} closeOnEsc={false}>
         <ModalOverlay />
         <ModalContent>

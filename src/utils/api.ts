@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://alto-api.onrender.com';  
+const API_BASE_URL = 'https://alto-prod.axesys.xyz';  
 
 export async function getOrCreateUUID(): Promise<string> {
   const storedUUID = localStorage.getItem('clientUUID');

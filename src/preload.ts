@@ -4,5 +4,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  captureScreen: () => ipcRenderer.invoke('CAPTURE_SCREEN')
+  captureScreen: () => ipcRenderer.invoke('CAPTURE_SCREEN'),
+  resizeAndPositionWindow: () => ipcRenderer.invoke('RESIZE_AND_POSITION_WINDOW')
 });

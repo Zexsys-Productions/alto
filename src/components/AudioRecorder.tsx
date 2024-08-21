@@ -2,6 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { uploadAudio, uploadScreenshot } from '../utils/api';
 import { playAudioFromBase64 } from '../utils/audio';
 
+declare global {
+  interface Window {
+    electronAPI: {
+      captureScreen: () => Promise<Electron.DesktopCapturerSource[]>;
+      resizeAndPositionWindow: () => Promise<void>;
+    }
+  }
+}
+
 interface AudioRecorderProps {
   isRecording: boolean;
   onStopRecording: (transcription: { chunks: Array<{ text: string, timestamp: number[] }>, text: string }, screenshotUrl: string, claudeResponse: string) => void;
@@ -196,7 +205,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ isRecording, onStopRecord
         setTranscription(result.transcription);
         
         // Get TTS audio for Claude's response
-        const ttsResponse = await fetch('https://alto-api.onrender.com/text-to-speech', {
+        const ttsResponse = await fetch('https://alto-prod.axesys.xyz/text-to-speech', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -7,7 +7,7 @@ import { Alert, AlertIcon, AlertTitle, AlertDescription, Box, Card, CardHeader, 
 import axios from 'axios';
 import { getOrCreateUUID } from '../utils/api';
 
-const API_BASE_URL = 'https://alto-api.onrender.com'; 
+const API_BASE_URL = 'https://alto-prod.axesys.xyz'; 
 
 const WakeWordDetector: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);

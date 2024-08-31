@@ -5,5 +5,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   captureScreen: () => ipcRenderer.invoke('CAPTURE_SCREEN'),
-  resizeAndPositionWindow: () => ipcRenderer.invoke('RESIZE_AND_POSITION_WINDOW')
+  resizeAndPositionWindow: () => ipcRenderer.invoke('RESIZE_AND_POSITION_WINDOW'),
+  closeApp: () => ipcRenderer.send('CLOSE_APP'),
+  openExternal: (url: string) => ipcRenderer.invoke('OPEN_EXTERNAL', url),
 });

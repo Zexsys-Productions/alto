@@ -1,0 +1,20 @@
+[
+  {
+    "id": "1",
+    "title": "Membuat Mesin Virtual",
+    "description": "Pelajari dasar-dasar membuat mesin virtual di Google Cloud Platform.",
+    "duration": "40 menit"
+  },
+  {
+    "id": "2",
+    "title": "Dasar-dasar Pembelajaran Mesin",
+    "description": "Pengenalan konsep dasar dan aplikasi pembelajaran mesin.",
+    "duration": "2 jam"
+  },
+  {
+    "id": "3",
+    "title": "Pemrosesan Bahasa Alami",
+    "description": "Eksplorasi teknik dan alat untuk menganalisis dan memahami bahasa manusia.",
+    "duration": "3 jam"
+  }
+]

@@ -5,6 +5,9 @@ declare global {
   interface Window {
     electronAPI: {
       captureScreen: () => Promise<Electron.DesktopCapturerSource[]>;
+      resizeAndPositionWindow: () => Promise<void>;
+      closeApp: () => void;
+      openExternal: (url: string) => void;
     };
   }
 }
@@ -16,8 +19,7 @@ const ScreenCapture: React.FC = () => {
   const captureScreen = async () => {
     try {
       const sources = await window.electronAPI.captureScreen();
-      const source = sources[0]; // Assuming we want the first screen
-
+      const source = sources[0];
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {

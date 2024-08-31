@@ -7,6 +7,8 @@ declare global {
     electronAPI: {
       captureScreen: () => Promise<Electron.DesktopCapturerSource[]>;
       resizeAndPositionWindow: () => Promise<void>;
+      closeApp: () => void;
+      openExternal: (url: string) => void;
     }
   }
 }

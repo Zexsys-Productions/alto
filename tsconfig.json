@@ -16,6 +16,6 @@
       "*": ["node_modules/*"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "src/types/svg.d.ts"]
 }
 

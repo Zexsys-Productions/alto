@@ -44,7 +44,7 @@ const steps: Step[] = [
 2. Scroll ke bawah dan cari "**Compute Engine**"
 3. Klik "**Compute Engine**"
 4. Jika anda belum pernah mengakses Compute Engine sebelumnya, akan muncul setelan untuk mengaktifkan Compute Engine API. Klik "**Enable**". Setelah aktif, ulang kembali ke instruksi yang pertama.
-4. Pilih "**VM Instances**" dari submenu di sebelah kiri layar.
+5. Pilih "**VM Instances**" dari submenu di sebelah kiri layar.
     `,
     task: "Navigasi ke bagian Compute Engine di GCP Console.",
     requirement: "The screenshot should display the Compute Engine dashboard or VM instances page. Look for 'Compute Engine' in the page title or navigation menu."
@@ -58,11 +58,22 @@ const steps: Step[] = [
     
 3. Biarkan pengaturan lain default
 4. Klik "**Create**" di bagian bawah halaman
+5. Anda akan dibawa ke halaman **VM instances**
     `,
     task: "Buatlah sebuah mesin virtual baru dengan nama 'my-first-instance'.",
     requirement: "The screenshot should show the 'Create an instance' page. Look for headers or titles regarding Machine configuration, name of instance, region of instance, etc."
   },
-  // Tambahkan langkah-langkah lain 
+  // Tambahkan langkah-langkah lain
+  {
+    title: "Masuk ke dalam VM",
+    content: `
+1. Di halaman VM instances, tunggu sampai bagian kolom **status** dari VM Anda ada lambang Success (✅)
+2. Jika sudah ada lambang Success (✅), itu berarti instance Anda berhasil dibuat
+3. Klik "**SSH**" pada kolom "Connect" untuk masuk ke dalam VM Anda
+    `,
+    task: "Masuk ke dalam mesin virtual Anda melalui SSH.",
+    requirement: "The screenshot should show a browser window with the title SSH-in-browser. Look for some sort of window containing a linux terminal."
+  }, 
 ];
 
 interface CreateVMCourseProps {

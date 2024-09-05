@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Box, VStack, Heading, Text, Button, useToast, Flex, Image } from '@chakra-ui/react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
+import { AnimatePresence, motion } from 'framer-motion';
 import HomeIcon from '../../../assets/svg/home.svg';
 import ArrowBackIcon from '../../../assets/svg/arrow_back.svg';
 import CheckIcon from '../../../assets/svg/check.svg';
 import TaskIcon from '../../../assets/svg/task.svg';
 import { Player } from '@lottiefiles/react-lottie-player';
+import correctSound from '../../../assets/audio/correct.mp3';
+import failSound from '../../../assets/audio/fail.mp3';
+import buttonSound from '../../../assets/audio/button.mp3';
+
+const correctAudio = new Audio(correctSound);
+const failAudio = new Audio(failSound);
+const buttonAudio = new Audio(buttonSound);
 
 declare global {
   interface Window {
@@ -162,6 +170,7 @@ const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack, onQuit }) => {
 
       if (response.data.response.toLowerCase().includes('true')) {
         console.log('Task completed successfully');
+        correctAudio.play(); 
         toast({
           title: "Tugas Selesai",
           description: "Bagus sekali! Beralih ke tugas berikutnya.",
@@ -179,6 +188,7 @@ const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack, onQuit }) => {
         }
       } else {
         console.log('Task not completed');
+        failAudio.play(); // Play fail sound
         toast({
           title: "Tugas Belum Selesai",
           description: "Silakan coba lagi untuk menyelesaikan tugas.",
@@ -194,6 +204,7 @@ const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack, onQuit }) => {
         console.error('Response status:', error.response.status);
         console.error('Response headers:', error.response.headers);
       }
+      failAudio.play();
       toast({
         title: "Kesalahan",
         description: "Gagal memeriksa penyelesaian tugas. Silakan coba lagi.",
@@ -217,6 +228,7 @@ const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack, onQuit }) => {
 
   const prevStep = () => {
     if (currentStep > 0) {
+      buttonAudio.play();
       setCurrentStep(currentStep - 1);
     }
   };
@@ -241,7 +253,10 @@ const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack, onQuit }) => {
                   p={2}
                   borderRadius="full"
                   cursor="pointer"
-                  onClick={onBack}
+                  onClick={() => {
+                    buttonAudio.play();
+                    onBack();
+                  }}
                 />
               </Box>
               <Text fontSize="xs">KEMBALI</Text>
@@ -267,13 +282,16 @@ const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack, onQuit }) => {
                 Anda sekarang memiliki keterampilan dasar untuk membuat dan mengelola mesin virtual di Google Cloud Platform.
               </Text>
               <Button 
-                onClick={onBack}
-                colorScheme="blue"
-                size="lg"
-                mt={4}
-              >
-                Kembali ke Beranda
-              </Button>
+              onClick={() => {
+                buttonAudio.play(); 
+                onBack();
+              }}
+              colorScheme="blue"
+              size="lg"
+              mt={4}
+            >
+              Kembali ke Beranda
+            </Button>
             </VStack>
           </Box>
         </VStack>
@@ -334,45 +352,55 @@ const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack, onQuit }) => {
                   />
                 </Box>
               </Flex>
-              <Box 
-                borderWidth={1} 
-                borderRadius="lg" 
-                p={6}
-                pb={4}
-                bg="white" 
-                boxShadow="0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 5px 15px -3px rgba(0, 0, 0, 0.2)"
-              >
-                <VStack align="stretch" spacing={4}>
-                  <Heading size="md">{steps[currentStep].title}</Heading>
-                  <Box pl={4}>
-                    <ReactMarkdown
-                      className="markdown-content"
-                      components={{
-                        a: ({ node, ...props }) => (
-                          <a
-                            {...props}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (window.electronAPI && window.electronAPI.openExternal) {
-                                window.electronAPI.openExternal(props.href);
-                              } else {
-                                window.open(props.href, '_blank', 'noopener,noreferrer');
-                              }
-                            }}
-                            style={{ color: '#3182ce', textDecoration: 'underline', cursor: 'pointer' }}
-                          />
-                        ),
-                      }}
-                    >
-                      {steps[currentStep].content}
-                    </ReactMarkdown>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep}
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Box 
+                    borderWidth={1} 
+                    borderRadius="lg" 
+                    p={6}
+                    pb={4}
+                    bg="white" 
+                    boxShadow="0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 5px 15px -3px rgba(0, 0, 0, 0.2)"
+                  >
+                    <VStack align="stretch" spacing={4}>
+                      <Heading size="md">{steps[currentStep].title}</Heading>
+                      <Box pl={4}>
+                        <ReactMarkdown
+                          className="markdown-content"
+                          components={{
+                            a: ({ node, ...props }) => (
+                              <a
+                                {...props}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (window.electronAPI && window.electronAPI.openExternal) {
+                                    window.electronAPI.openExternal(props.href);
+                                  } else {
+                                    window.open(props.href, '_blank', 'noopener,noreferrer');
+                                  }
+                                }}
+                                style={{ color: '#3182ce', textDecoration: 'underline', cursor: 'pointer' }}
+                              />
+                            ),
+                          }}
+                        >
+                          {steps[currentStep].content}
+                        </ReactMarkdown>
+                      </Box>
+                      <Flex alignItems="center">
+                        <Image src={TaskIcon} boxSize="24px" mr={2} />
+                        <Text fontWeight="bold">Tugas: {steps[currentStep].task}</Text>
+                      </Flex>
+                    </VStack>
                   </Box>
-                  <Flex alignItems="center">
-                    <Image src={TaskIcon} boxSize="24px" mr={2} />
-                    <Text fontWeight="bold">Tugas: {steps[currentStep].task}</Text>
-                  </Flex>
-                </VStack>
-              </Box>
+                </motion.div>
+              </AnimatePresence>
             </Box>
             <Flex justifyContent="space-between" mt={2}>
               {currentStep > 0 && (

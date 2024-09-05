@@ -5,6 +5,7 @@ import courses from '../../data/courses.json';
 import StartIcon from '../../assets/svg/start.svg';
 import DurationIcon from '../../assets/svg/duration.svg';
 
+
 interface Course {
   id: string;
   title: string;
@@ -72,8 +73,7 @@ const SkillBoostHome: React.FC<SkillBoostHomeProps> = ({ onBack, onStartCourse }
                 cursor="pointer"
                 onClick={() => onStartCourse(course.id)}
                 _hover={{ bg: "blue.600" }}
-                borderTopRightRadius="md"
-                borderBottomRightRadius="md"
+                borderRadius="md"
                 my={2}
                 mr={2}
               >

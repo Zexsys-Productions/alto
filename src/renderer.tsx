@@ -4,6 +4,7 @@ import './fonts.css';
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import WakeWordDetector from './components/WakeWordDetector';
 import Home from './components/Home';
 import SkillBoostHome from './components/train/SkillBoostHome';
@@ -42,7 +43,7 @@ const App = () => {
         return (
           <SkillBoostHome 
             onBack={() => setCurrentView('home')} 
-            onStartCourse={(courseId) => {
+            onStartCourse={(courseId: string) => {
               setCurrentCourseId(courseId);
               setCurrentView('course');
             }}
@@ -54,12 +55,24 @@ const App = () => {
         }
         // Add more course components
         return null;
+      default:
+        return null;
     }
   };
 
   return (
     <ChakraProvider theme={theme}>
-      {renderView()}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentView}
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -100 }}
+          transition={{ duration: 0.5 }}
+        >
+          {renderView()}
+        </motion.div>
+      </AnimatePresence>
     </ChakraProvider>
   );
 };

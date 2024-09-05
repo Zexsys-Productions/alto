@@ -31,9 +31,18 @@ export const rules: Required<ModuleOptions>['rules'] = [
   {
     test: /\.(png|jpg|gif|svg|glb)$/,
     type: 'asset/resource'
-},
+  },
   {
     test: /\.(woff|woff2|eot|ttf|otf)$/i,
     type: 'asset/resource',
+  },
+  {
+    test: /\.(mp3|wav)$/,
+    use: {
+      loader: 'file-loader',
+      options: {
+        name: '[path][name].[ext]',
+      },
+    },
   },
 ];

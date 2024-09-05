@@ -8,6 +8,33 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   font-family: 'Outfit', sans-serif;
+  box-sizing: border-box;
+  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  overflow-y: auto;
+  position: relative;
+  border: 0.7px solid rgba(0, 0, 0, 0.8);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0.7px;
+  background-color: rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* WebKit browsers (Chrome, Safari) */
+html::-webkit-scrollbar, 
+body::-webkit-scrollbar, 
+#root::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 #root {

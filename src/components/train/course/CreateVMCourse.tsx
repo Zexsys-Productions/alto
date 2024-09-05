@@ -6,6 +6,7 @@ import HomeIcon from '../../../assets/svg/home.svg';
 import ArrowBackIcon from '../../../assets/svg/arrow_back.svg';
 import CheckIcon from '../../../assets/svg/check.svg';
 import TaskIcon from '../../../assets/svg/task.svg';
+import { Player } from '@lottiefiles/react-lottie-player';
 
 declare global {
   interface Window {
@@ -61,7 +62,7 @@ const steps: Step[] = [
 5. Anda akan dibawa ke halaman **VM instances**
     `,
     task: "Buatlah sebuah mesin virtual baru dengan nama 'my-first-instance'.",
-    requirement: "The screenshot should show the 'Create an instance' page. Look for headers or titles regarding Machine configuration, name of instance, region of instance, etc."
+    requirement: "The screenshot should show the VM Instances page. Look for a virtual machine being created named my-first-instance."
   },
   // Tambahkan langkah-langkah lain
   {
@@ -78,6 +79,7 @@ const steps: Step[] = [
 
 interface CreateVMCourseProps {
   onBack: () => void;
+  onQuit: () => void;
 }
 
 const captureScreenshot = async (): Promise<File> => {
@@ -123,9 +125,11 @@ const captureScreenshot = async (): Promise<File> => {
   }
 };
 
-const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack }) => {
+const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack, onQuit }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
+  const [isCourseCompleted, setIsCourseCompleted] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<boolean[]>(new Array(steps.length).fill(false));
   const toast = useToast();
 
   const checkTaskCompletion = async () => {
@@ -165,7 +169,14 @@ const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack }) => {
           duration: 1000,
           isClosable: true,
         });
-        nextStep();
+        const newCompletedSteps = [...completedSteps];
+        newCompletedSteps[currentStep] = true;
+        setCompletedSteps(newCompletedSteps);
+        if (currentStep === steps.length - 1) {
+          setIsCourseCompleted(true);
+        } else {
+          nextStep();
+        }
       } else {
         console.log('Task not completed');
         toast({
@@ -199,6 +210,8 @@ const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack }) => {
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
+    } else {
+      setIsCourseCompleted(true);
     }
   };
 
@@ -208,119 +221,198 @@ const CreateVMCourse: React.FC<CreateVMCourseProps> = ({ onBack }) => {
     }
   };
 
-  return (
-    <Box p={8} pt={4}>
-      <VStack spacing={8} align="stretch">
-        <Flex justifyContent="space-between" alignItems="center" mb={4}>
-          <Heading>Membuat Mesin Virtual</Heading>
-          <VStack alignItems="center" spacing={1}>
-            <Box
-              borderWidth="2px"
-              borderColor="black"
-              borderRadius="full"
-              p={0.5}
-            >
-              <Image
-                src={HomeIcon}
-                boxSize="40px"
-                bg="gray.100"
-                p={2}
+  const CongratulationsScreen: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+    return (
+      <Box p={8} pt={4}>
+        <VStack spacing={8} align="stretch">
+          <Flex justifyContent="space-between" alignItems="center" mb={4}>
+            <Heading>Selamat!</Heading>
+            <VStack alignItems="center" spacing={1}>
+              <Box
+                borderWidth="2px"
+                borderColor="black"
                 borderRadius="full"
-                cursor="pointer"
-                onClick={onBack}
-              />
-            </Box>
-            <Text fontSize="xs">KEMBALI</Text>
-          </VStack>
-        </Flex>
-        <Box position="relative">
-          <Flex 
-            position="absolute" 
-            top="-40px" 
-            left="0" 
-            right="0" 
-            alignItems="center" 
-            zIndex="1"
-          >
-            <Text fontWeight="bold" mr={4}>
-              {currentStep + 1}/{steps.length}
-            </Text>
-            <Box flex="1" height="4px" bg="gray.500" borderRadius="full">
-              <Box 
-                height="100%" 
-                width={`${((currentStep + 1) / steps.length) * 100}%`} 
-                bg="blue.500" 
-                borderRadius="full"
-              />
-            </Box>
+                p={0.5}
+              >
+                <Image
+                  src={HomeIcon}
+                  boxSize="40px"
+                  bg="gray.100"
+                  p={2}
+                  borderRadius="full"
+                  cursor="pointer"
+                  onClick={onBack}
+                />
+              </Box>
+              <Text fontSize="xs">KEMBALI</Text>
+            </VStack>
           </Flex>
           <Box 
             borderWidth={1} 
             borderRadius="lg" 
             p={6}
-            pb={4}
             bg="white" 
             boxShadow="0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 5px 15px -3px rgba(0, 0, 0, 0.2)"
           >
-            <VStack align="stretch" spacing={4}>
-              <Heading size="md">{steps[currentStep].title}</Heading>
-              <Box pl={4}>
-                <ReactMarkdown
-                  className="markdown-content"
-                  components={{
-                    a: ({ node, ...props }) => (
-                      <a
-                        {...props}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (window.electronAPI && window.electronAPI.openExternal) {
-                            window.electronAPI.openExternal(props.href);
-                          } else {
-                            window.open(props.href, '_blank', 'noopener,noreferrer');
-                          }
-                        }}
-                        style={{ color: '#3182ce', textDecoration: 'underline', cursor: 'pointer' }}
-                      />
-                    ),
-                  }}
-                >
-                  {steps[currentStep].content}
-                </ReactMarkdown>
-              </Box>
-              <Flex alignItems="center">
-                <Image src={TaskIcon} boxSize="24px" mr={2} />
-                <Text fontWeight="bold">Tugas: {steps[currentStep].task}</Text>
-              </Flex>
+            <VStack spacing={4} align="center">
+              <Heading size="xl" textAlign="center">Anda telah menyelesaikan kursus!</Heading>
+              <Player
+                autoplay
+                loop
+                src="https://lottie.host/497b0e0c-cb24-4e78-8b06-f5319b0c1c07/ZpjSVlkdra.json"
+                style={{ height: '200px', width: '200px' }}
+              />
+              <Text fontSize="lg" textAlign="center">
+                Selamat atas pencapaian Anda dalam menyelesaikan kursus "Membuat Mesin Virtual". 
+                Anda sekarang memiliki keterampilan dasar untuk membuat dan mengelola mesin virtual di Google Cloud Platform.
+              </Text>
+              <Button 
+                onClick={onBack}
+                colorScheme="blue"
+                size="lg"
+                mt={4}
+              >
+                Kembali ke Beranda
+              </Button>
             </VStack>
           </Box>
+        </VStack>
+      </Box>
+    );
+  };
+
+  return (
+    <>
+      {isCourseCompleted ? (
+        <CongratulationsScreen onBack={onBack} />
+      ) : (
+        <Box p={8} pt={4}>
+          <VStack spacing={8} align="stretch">
+            <Flex justifyContent="space-between" alignItems="center" mb={4}>
+              <Heading>Membuat Mesin Virtual</Heading>
+              <VStack alignItems="center" spacing={1}>
+                <Box
+                  borderWidth="2px"
+                  borderColor="black"
+                  borderRadius="full"
+                  p={0.5}
+                >
+                  <Image
+                    src={HomeIcon}
+                    boxSize="40px"
+                    bg="gray.100"
+                    p={2}
+                    borderRadius="full"
+                    cursor="pointer"
+                    onClick={() => {
+                      setCompletedSteps(new Array(steps.length).fill(false));
+                      onQuit();
+                    }}
+                  />
+                </Box>
+                <Text fontSize="xs">KEMBALI</Text>
+              </VStack>
+            </Flex>
+            <Box position="relative">
+              <Flex 
+                position="absolute" 
+                top="-40px" 
+                left="0" 
+                right="0" 
+                alignItems="center" 
+                zIndex="1"
+              >
+                <Text fontWeight="bold" mr={4}>
+                  {currentStep + 1}/{steps.length}
+                </Text>
+                <Box flex="1" height="4px" bg="gray.500" borderRadius="full">
+                  <Box 
+                    height="100%" 
+                    width={`${((currentStep + 1) / steps.length) * 100}%`} 
+                    bg="blue.500" 
+                    borderRadius="full"
+                  />
+                </Box>
+              </Flex>
+              <Box 
+                borderWidth={1} 
+                borderRadius="lg" 
+                p={6}
+                pb={4}
+                bg="white" 
+                boxShadow="0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 5px 15px -3px rgba(0, 0, 0, 0.2)"
+              >
+                <VStack align="stretch" spacing={4}>
+                  <Heading size="md">{steps[currentStep].title}</Heading>
+                  <Box pl={4}>
+                    <ReactMarkdown
+                      className="markdown-content"
+                      components={{
+                        a: ({ node, ...props }) => (
+                          <a
+                            {...props}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (window.electronAPI && window.electronAPI.openExternal) {
+                                window.electronAPI.openExternal(props.href);
+                              } else {
+                                window.open(props.href, '_blank', 'noopener,noreferrer');
+                              }
+                            }}
+                            style={{ color: '#3182ce', textDecoration: 'underline', cursor: 'pointer' }}
+                          />
+                        ),
+                      }}
+                    >
+                      {steps[currentStep].content}
+                    </ReactMarkdown>
+                  </Box>
+                  <Flex alignItems="center">
+                    <Image src={TaskIcon} boxSize="24px" mr={2} />
+                    <Text fontWeight="bold">Tugas: {steps[currentStep].task}</Text>
+                  </Flex>
+                </VStack>
+              </Box>
+            </Box>
+            <Flex justifyContent="space-between" mt={2}>
+              {currentStep > 0 && (
+                <Button 
+                  onClick={prevStep} 
+                  disabled={isChecking}
+                  colorScheme="gray"
+                  leftIcon={<Image src={ArrowBackIcon} boxSize="20px" />}
+                  mr={2} 
+                >
+                  Kembali
+                </Button>
+              )}
+              {completedSteps[currentStep] ? (
+                <Button 
+                  onClick={nextStep}
+                  colorScheme="green"
+                  ml={currentStep > 0 ? 2 : 'auto'}
+                  flexGrow={1}
+                >
+                  Lanjut
+                </Button>
+              ) : (
+                <Button 
+                  onClick={checkTaskCompletion} 
+                  isLoading={isChecking} 
+                  loadingText="Memeriksa..."
+                  colorScheme="blue"
+                  leftIcon={<Image src={CheckIcon} boxSize="20px" />}
+                  ml={currentStep > 0 ? 2 : 'auto'}
+                  flexGrow={1}
+                >
+                  Periksa tugas
+                </Button>
+              )}
+            </Flex>
+          </VStack>
         </Box>
-        <Flex justifyContent="space-between" mt={2}>
-          {currentStep > 0 && (
-            <Button 
-              onClick={prevStep} 
-              disabled={isChecking}
-              colorScheme="gray"
-              leftIcon={<Image src={ArrowBackIcon} boxSize="20px" />}
-            >
-              Kembali
-            </Button>
-          )}
-          {currentStep < steps.length - 1 && (
-            <Button 
-              onClick={checkTaskCompletion} 
-              isLoading={isChecking} 
-              loadingText="Memeriksa..."
-              colorScheme="blue"
-              leftIcon={<Image src={CheckIcon} boxSize="20px" />}
-              ml="auto"
-              flexGrow={1}
-            >
-              Periksa tugas
-            </Button>
-          )}
-        </Flex>
-      </VStack>
-    </Box>
+      )}
+    </>
   );
 };
 

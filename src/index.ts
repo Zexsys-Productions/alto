@@ -42,7 +42,7 @@ const createWindow = (): void => {
   // Add Content Security Policy to allow connections to the API
   const csp = [
     "default-src 'self' 'unsafe-inline' data:;",
-    "connect-src 'self' https://alto-prod.axesys.xyz https://*.picovoice.ai https://*.picovoice.net;",
+    "connect-src 'self' https://alto-prod.axesys.xyz https://*.picovoice.ai https://*.picovoice.net https://lottie.host;",
     "img-src 'self' data: https://storage.googleapis.com;",
     "script-src 'self' 'unsafe-eval' blob:;",
     "worker-src 'self' blob:;",

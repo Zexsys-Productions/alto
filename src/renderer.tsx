@@ -50,7 +50,7 @@ const App = () => {
         );
       case 'course':
         if (currentCourseId === '1') {
-          return <CreateVMCourse onBack={() => setCurrentView('skillBoost')} />;
+          return <CreateVMCourse onBack={() => setCurrentView('skillBoost')} onQuit={() => setCurrentView('skillBoost')}/>;
         }
         // Add more course components
         return null;

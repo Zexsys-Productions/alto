@@ -6,6 +6,10 @@ import SkillBoostHome from './train/SkillBoostHome';
 import CloudIcon from '../assets/svg/cloud.svg';
 import AspectRatioIcon from '../assets/svg/aspect_ratio.svg';
 import ExitIcon from '../assets/svg/exit.svg';
+import LogoIcon from '../assets/svg/logo.svg';
+
+import buttonSound from '../assets/audio/button.mp3';
+const buttonAudio = new Audio(buttonSound);
 
 interface HomeProps {
   onStartDetection: () => void;
@@ -29,6 +33,7 @@ const Home: React.FC<HomeProps> = ({ onStartDetection, onNavigateToSkillBoost })
   };
 
   const handleNavigateToSkillBoost = async () => {
+    buttonAudio.play();
     await handleResizeAndPosition();
     onNavigateToSkillBoost();
   };
@@ -50,8 +55,11 @@ const Home: React.FC<HomeProps> = ({ onStartDetection, onNavigateToSkillBoost })
       position="relative"
     >
       <VStack spacing={2} align="center" width="100%" maxWidth="300px">
-        <Heading textAlign="center" fontSize="5xl" mb={0.2}>Alto AI</Heading>
-        <Text textAlign="center" fontSize="md">Mempelajari cara menggunakan GCP <Image src={CloudIcon} display="inline-block" width="18px" height="18px" verticalAlign="text-bottom" ml="2px" /></Text>
+        <Image src={LogoIcon} alt="Alto AI Logo" width="90px" height="90px" maxWidth="100%" />
+        <Flex align="center" justify="center" textAlign="center" fontSize="md">
+          <Text>Mempelajari cara menggunakan GCP</Text>
+          <Image src={CloudIcon} display="inline-block" width="14px" height="14px" verticalAlign="text-bottom" ml="2px" />
+        </Flex>
       </VStack>
       <Box position="absolute" top="50%" left="50%" transform="translate(-50%, -50%)">
         <Button onClick={handleNavigateToSkillBoost} colorScheme="blue" marginTop={10} size="lg" height="50px" width="300px">

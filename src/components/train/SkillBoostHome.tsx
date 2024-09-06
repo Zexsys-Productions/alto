@@ -4,7 +4,8 @@ import HomeIcon from '../../assets/svg/home.svg';
 import courses from '../../data/courses.json';
 import StartIcon from '../../assets/svg/start.svg';
 import DurationIcon from '../../assets/svg/duration.svg';
-
+import buttonSound from '../../assets/audio/button.mp3';
+const buttonAudio = new Audio(buttonSound);
 
 interface Course {
   id: string;
@@ -40,7 +41,10 @@ const SkillBoostHome: React.FC<SkillBoostHomeProps> = ({ onBack, onStartCourse }
               p={2}
               borderRadius="full"
               cursor="pointer"
-              onClick={onBack}
+              onClick={() => {
+                buttonAudio.play();
+                onBack();
+              }}
             />
           </Box>
           <Text fontSize="xs">BERANDA</Text>
@@ -71,7 +75,10 @@ const SkillBoostHome: React.FC<SkillBoostHomeProps> = ({ onBack, onStartCourse }
                 p={4}
                 width="120px"
                 cursor="pointer"
-                onClick={() => onStartCourse(course.id)}
+                onClick={() => {
+                  buttonAudio.play();
+                  onStartCourse(course.id);
+                }}
                 _hover={{ bg: "blue.600" }}
                 borderRadius="md"
                 my={2}
